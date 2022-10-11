@@ -27,6 +27,17 @@
     "illuminate/support": "^9.34"
   },
   "require-dev": {
-    "orchestra/testbench": "^7.9"
+    "orchestra/testbench": "^7.9",
+    "phpunit/phpunit": "^9.5"
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Yomafleet\\EventLogger\\ServiceProvider"
+      ],
+      "aliases": [
+        "Yomafleet\\EventLogger\\EventLoggerFacade"
+      ]
+    }
   }
 }
