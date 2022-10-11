@@ -1,19 +1,32 @@
 {
-    "name": "yomafleet/event-logger",
-    "description": "Log in YF's preference format",
-    "type": "library",
-    "autoload": {
-        "psr-4": {
-            "Yomafleet\\EventLogger\\": "src/"
-        }
-    },
-    "authors": [
-        {
-            "name": "aungchitmin",
-            "email": "aungchitmin@yomafleet.com"
-        }
-    ],
-    "require": {
-        "illuminate/support": "^9.34"
+  "name": "yomafleet/event-logger",
+  "description": "Log in YF's preference format",
+  "type": "library",
+  "autoload": {
+    "psr-4": {
+      "Yomafleet\\EventLogger\\": "src/"
     }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "authors": [
+    {
+      "name": "aungchitmin",
+      "email": "aungchitmin@yomafleet.com"
+    }
+  ],
+  "scripts": {
+    "post-autoload-dump": [
+      "@php ./vendor/bin/testbench package:discover --ansi"
+    ]
+  },
+  "require": {
+    "illuminate/support": "^9.34"
+  },
+  "require-dev": {
+    "orchestra/testbench": "^7.9"
+  }
 }
