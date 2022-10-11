@@ -2,6 +2,7 @@
   "name": "yomafleet/event-logger",
   "description": "Log in YF's preference format",
   "type": "library",
+  "license": "MIT",
   "autoload": {
     "psr-4": {
       "Yomafleet\\EventLogger\\": "src/"
