@@ -1,0 +1,17 @@
+{
+    "name": "yomafleet/event-logger",
+    "description": "Log in YF's preference format",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Yomafleet\\EventLogger\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "aungchitmin",
+            "email": "aungchitmin@yomafleet.com"
+        }
+    ],
+    "require": {}
+}
