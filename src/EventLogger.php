@@ -2,23 +2,24 @@
 
 namespace Yomafleet\EventLogger;
 
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 
 class EventLogger implements EventLoggerInterface
 {
     /**
      * Log data with rigid format.
      *
-     * @param  string  $level
-     * @param  string  $message
-     * @param  array  $data
+     * @param string $level
+     * @param string $message
+     * @param array  $data
+     *
      * @return bool
      */
     public function log(string $level, string $message, array $data)
     {
-        $logDisable = Config::get("logging.eventlog.disabled", false);
+        $logDisable = Config::get('logging.eventlog.disabled', false);
 
         if ($logDisable) {
             return false;
@@ -40,7 +41,7 @@ class EventLogger implements EventLoggerInterface
         $keys = ['id', 'username', 'email'];
 
         foreach ($keys as $key) {
-            if (! isset($data['trigger_by'][$key])) {
+            if (!isset($data['trigger_by'][$key])) {
                 throw new \InvalidArgumentException(
                     "Key named '{$key}' is not found in 'trigger_by'"
                 );
@@ -58,13 +59,14 @@ class EventLogger implements EventLoggerInterface
     /**
      * Try to populate some mendatory data if not provided.
      *
-     * @param  array  $data
+     * @param array $data
+     *
      * @return array
      */
     protected function tryPopulateMendatoryData(array $data)
     {
         // try to add triggerer if not specified
-        if (! isset($data['trigger_by'])) {
+        if (!isset($data['trigger_by'])) {
             /** @var mixed */
             $user = Auth::user() ?? null;
             $data['trigger_by'] = $user
@@ -73,7 +75,7 @@ class EventLogger implements EventLoggerInterface
         }
 
         // get type from event key if not specified
-        if (! isset($data['type']) && isset($data['event'])) {
+        if (!isset($data['type']) && isset($data['event'])) {
             $data['type'] = explode('.', $data['event'])[0];
         }
 
@@ -83,20 +85,21 @@ class EventLogger implements EventLoggerInterface
     /**
      * Validate whether given data has required attributes.
      *
-     * @param  array  $data
-     * @return void
+     * @param array $data
      *
      * @throws \InvalidArgumentException
+     *
+     * @return void
      */
     protected function validate(array $data)
     {
-        if (! isset($data['event'])) {
+        if (!isset($data['event'])) {
             throw new \InvalidArgumentException(
                 "Key named 'event' is not found!"
             );
         }
 
-        if (! isset($data['data'])) {
+        if (!isset($data['data'])) {
             throw new \InvalidArgumentException(
                 "Key named 'data' is not found!"
             );
