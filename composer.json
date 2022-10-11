@@ -13,5 +13,7 @@
             "email": "aungchitmin@yomafleet.com"
         }
     ],
-    "require": {}
+    "require": {
+        "illuminate/support": "^9.34"
+    }
 }
