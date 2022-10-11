@@ -7,7 +7,7 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
     /**
      * Get package providers.
      *
-     * @param  \Illuminate\Foundation\Application  $app
+     * @param \Illuminate\Foundation\Application $app
      *
      * @return array<int, string>
      */
@@ -21,7 +21,7 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
     /**
      * Override application aliases.
      *
-     * @param  \Illuminate\Foundation\Application  $app
+     * @param \Illuminate\Foundation\Application $app
      *
      * @return array<string, string>
      */

@@ -2,10 +2,10 @@
 
 namespace Tests;
 
-use Yomafleet\EventLogger\EventLoggerFacade as EventLogger;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
+use Yomafleet\EventLogger\EventLoggerFacade as EventLogger;
 
 class EventLoggerTest extends TestCase
 {
@@ -13,17 +13,17 @@ class EventLoggerTest extends TestCase
     {
         Config::shouldReceive('get')
             ->once()
-            ->with("logging.eventlog.disabled", false)
+            ->with('logging.eventlog.disabled', false)
             ->andReturn(true);
 
         $level = 'info';
         $message = 'Example';
         $data = [
-            'event' => 'example.dummy',
+            'event'      => 'example.dummy',
             'trigger_by' => [
-                'id' => 1,
+                'id'       => 1,
                 'username' => 'Admin',
-                'email' => 'admin@example.com',
+                'email'    => 'admin@example.com',
             ],
             'type' => 'example',
             'data' => ['key' => 'value'],
@@ -38,11 +38,11 @@ class EventLoggerTest extends TestCase
         $level = 'info';
         $message = 'Example';
         $data = [
-            'event' => 'example.dummy',
+            'event'      => 'example.dummy',
             'trigger_by' => [
-                'id' => 1,
+                'id'       => 1,
                 'username' => 'Admin',
-                'email' => 'admin@example.com',
+                'email'    => 'admin@example.com',
             ],
             'type' => 'example',
             'data' => ['key' => 'value'],
@@ -63,17 +63,17 @@ class EventLoggerTest extends TestCase
         $message = 'Example';
         $data = [
             'event' => 'example.dummy',
-            'type' => 'example',
-            'data' => ['key' => 'value'],
+            'type'  => 'example',
+            'data'  => ['key' => 'value'],
         ];
 
         Auth::shouldReceive('user')->once()->andReturn(null);
         Log::shouldReceive($level)
             ->once()
             ->with($message, $data + ['trigger_by' => [
-                'id' => 0,
+                'id'       => 0,
                 'username' => 'system',
-                'email' => '',
+                'email'    => '',
             ]]);
 
         EventLogger::log($level, $message, $data);
@@ -88,9 +88,9 @@ class EventLoggerTest extends TestCase
         $message = 'Example';
         $data = [
             'trigger_by' => [
-                'id' => 1,
+                'id'       => 1,
                 'username' => 'Admin',
-                'email' => 'admin@example.com',
+                'email'    => 'admin@example.com',
             ],
             'type' => 'example',
             'data' => ['key' => 'value'],
@@ -107,11 +107,11 @@ class EventLoggerTest extends TestCase
         $level = 'info';
         $message = 'Example';
         $data = [
-            'event' => 'example.dummy',
+            'event'      => 'example.dummy',
             'trigger_by' => [
-                'id' => 1,
+                'id'       => 1,
                 'username' => 'Admin',
-                'email' => 'admin@example.com',
+                'email'    => 'admin@example.com',
             ],
             'type' => 'example',
         ];
@@ -127,7 +127,7 @@ class EventLoggerTest extends TestCase
         $level = 'info';
         $message = 'Example';
         $data = [
-            'event' => 'example.dummy',
+            'event'      => 'example.dummy',
             'trigger_by' => [
                 'id' => 1,
             ],
@@ -143,11 +143,11 @@ class EventLoggerTest extends TestCase
         $level = 'info';
         $message = 'Example';
         $data = [
-            'event' => 'example.dummy',
+            'event'      => 'example.dummy',
             'trigger_by' => [
-                'id' => 1,
+                'id'       => 1,
                 'username' => 'Admin',
-                'email' => 'admin@example.com',
+                'email'    => 'admin@example.com',
             ],
             'type' => 'example',
             'data' => ['key' => 'value'],
@@ -169,15 +169,15 @@ class EventLoggerTest extends TestCase
         $message = 'Example';
         $data = [
             'event' => 'example.dummy',
-            'type' => 'example',
-            'data' => ['key' => 'value'],
+            'type'  => 'example',
+            'data'  => ['key' => 'value'],
         ];
 
         $dataWithTriggerer = $data + [
             'trigger_by' => [
-                'id' => 0,
+                'id'       => 0,
                 'username' => 'system',
-                'email' => '',
+                'email'    => '',
             ],
         ];
 
@@ -191,13 +191,12 @@ class EventLoggerTest extends TestCase
     public function test_event_log_add_triggerer_as_auth_user_if_not_provided()
     {
         $dummy = [
-            'id' => 1,
+            'id'       => 1,
             'username' => 'Admin',
-            'email' => 'admin@example.com',
+            'email'    => 'admin@example.com',
         ];
         Auth::shouldReceive('user')
-            ->andReturn(new class($dummy)
-            {
+            ->andReturn(new class($dummy) {
                 public $data;
 
                 public function __construct($data)
@@ -215,8 +214,8 @@ class EventLoggerTest extends TestCase
         $message = 'Example';
         $data = [
             'event' => 'example.dummy',
-            'type' => 'example',
-            'data' => ['key' => 'value'],
+            'type'  => 'example',
+            'data'  => ['key' => 'value'],
         ];
 
         $dataWithTriggerer = $data + [
@@ -235,11 +234,11 @@ class EventLoggerTest extends TestCase
         $level = 'info';
         $message = 'Example';
         $data = [
-            'event' => 'example.dummy',
+            'event'      => 'example.dummy',
             'trigger_by' => [
-                'id' => 1,
+                'id'       => 1,
                 'username' => 'Admin',
-                'email' => 'admin@example.com',
+                'email'    => 'admin@example.com',
             ],
             'data' => ['key' => 'value'],
         ];
