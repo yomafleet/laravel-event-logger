@@ -1,3 +1,4 @@
 /vendor/
 .git
 .vscode
+.phpunit.result.cache
