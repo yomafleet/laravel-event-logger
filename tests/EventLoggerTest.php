@@ -5,9 +5,34 @@ namespace Tests;
 use Yomafleet\EventLogger\EventLoggerFacade as EventLogger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Config;
 
 class EventLoggerTest extends TestCase
 {
+    public function test_logger_not_run_if_disable()
+    {
+        Config::shouldReceive('get')
+            ->once()
+            ->with("logging.eventlog.disabled", false)
+            ->andReturn(true);
+
+        $level = 'info';
+        $message = 'Example';
+        $data = [
+            'event' => 'example.dummy',
+            'trigger_by' => [
+                'id' => 1,
+                'username' => 'Admin',
+                'email' => 'admin@example.com',
+            ],
+            'type' => 'example',
+            'data' => ['key' => 'value'],
+        ];
+
+        $logged = EventLogger::log($level, $message, $data);
+        $this->assertFalse($logged);
+    }
+
     public function test_log_with_expected_data_structure()
     {
         $level = 'info';

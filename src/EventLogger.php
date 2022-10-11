@@ -14,22 +14,25 @@ class EventLogger implements EventLoggerInterface
      * @param  string  $level
      * @param  string  $message
      * @param  array  $data
-     * @return void
+     * @return bool
      */
     public function log(string $level, string $message, array $data)
     {
+        $logDisable = Config::get("logging.eventlog.disabled", false);
+
+        if ($logDisable) {
+            return false;
+        }
+
         $data = $this->tryPopulateMendatoryData($data);
 
         $this->validate($data);
 
         $data = $this->normalizeTriggerer($data);
 
-        $logDisable = Config::get("logging.eventlog.disabled", false);
+        Log::$level($message, $data);
 
-        if (!$logDisable) {
-            Log::$level($message, $data);
-        }
-
+        return true;
     }
 
     protected function normalizeTriggerer($data)
