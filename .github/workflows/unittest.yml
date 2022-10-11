@@ -1,0 +1,28 @@
+name: Car Share Event Logger Unit Tests
+
+on:
+  pull_request:
+    branches: [dev-master]
+    paths-ignore:
+      - "README.md"
+      - ".github/**"
+
+jobs:
+  laravel-unit-tests:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: shivammathur/setup-php@2.21.0
+        with:
+          php-version: "8.0.2"
+          extensions: mbstring, intl, dom, curl, libxml, zip, json, Phar, dom, pcre, Reflection, SPL, tokenizer
+
+      - name: Code Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies
+        run: composer install
+
+      - name: Run Unit Tests
+        continue-on-error: false
+        run: vendor/bin/phpunit 
