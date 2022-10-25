@@ -41,7 +41,7 @@ class EventLoggerTest extends TestCase
             'event'      => 'example.dummy',
             'trigger_by' => [
                 'id'       => 1,
-                'username' => 'Admin',
+                'name'     => 'Admin',
                 'email'    => 'admin@example.com',
             ],
             'type' => 'example',
@@ -72,7 +72,7 @@ class EventLoggerTest extends TestCase
             ->once()
             ->with($message, $data + ['trigger_by' => [
                 'id'       => 0,
-                'username' => 'system',
+                'name'     => 'system',
                 'email'    => '',
             ]]);
 
@@ -89,7 +89,7 @@ class EventLoggerTest extends TestCase
         $data = [
             'trigger_by' => [
                 'id'       => 1,
-                'username' => 'Admin',
+                'name'     => 'Admin',
                 'email'    => 'admin@example.com',
             ],
             'type' => 'example',
@@ -110,7 +110,7 @@ class EventLoggerTest extends TestCase
             'event'      => 'example.dummy',
             'trigger_by' => [
                 'id'       => 1,
-                'username' => 'Admin',
+                'name'     => 'Admin',
                 'email'    => 'admin@example.com',
             ],
             'type' => 'example',
@@ -122,7 +122,7 @@ class EventLoggerTest extends TestCase
     public function test_event_log_throws_if_trigger_by_is_incomplete()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('username');
+        $this->expectExceptionMessage('name');
 
         $level = 'info';
         $message = 'Example';
@@ -146,7 +146,7 @@ class EventLoggerTest extends TestCase
             'event'      => 'example.dummy',
             'trigger_by' => [
                 'id'       => 1,
-                'username' => 'Admin',
+                'name'     => 'Admin',
                 'email'    => 'admin@example.com',
             ],
             'type' => 'example',
@@ -176,7 +176,7 @@ class EventLoggerTest extends TestCase
         $dataWithTriggerer = $data + [
             'trigger_by' => [
                 'id'       => 0,
-                'username' => 'system',
+                'name'     => 'system',
                 'email'    => '',
             ],
         ];
@@ -192,7 +192,7 @@ class EventLoggerTest extends TestCase
     {
         $dummy = [
             'id'       => 1,
-            'username' => 'Admin',
+            'name'     => 'Admin',
             'email'    => 'admin@example.com',
         ];
         Auth::shouldReceive('user')
@@ -229,25 +229,81 @@ class EventLoggerTest extends TestCase
         EventLogger::log($level, $message, $data);
     }
 
-    public function test_event_log_add_target_if_not_provided()
+    public function test_event_log_add_type_if_not_provided()
     {
         $level = 'info';
         $message = 'Example';
         $data = [
             'event'      => 'example.dummy',
+            'data'       => ['key' => 'value'],
+            'trigger_by' => [
+                'id'       => 1,
+                'name'     => 'Admin',
+                'email'    => 'admin@example.com',
+            ],
+        ];
+
+        $dataWithType = $data + ['type' => 'example'];
+
+        Log::shouldReceive($level)
+            ->once()
+            ->with($message, $dataWithType);
+
+        EventLogger::log($level, $message, $data);
+    }
+
+    public function test_event_log_triggerer_names_configurable()
+    {
+        $level = 'info';
+        $message = 'Example';
+        $data = [
+            'event'      => 'example.dummy',
+            'data'       => ['key' => 'value'],
             'trigger_by' => [
                 'id'       => 1,
                 'username' => 'Admin',
                 'email'    => 'admin@example.com',
             ],
-            'data' => ['key' => 'value'],
+            'type' => 'example',
         ];
 
-        $dataWithTarget = $data + ['type' => 'example'];
+        $dataWithTriggererNameKeyChanged = $data;
+        $dataWithTriggererNameKeyChanged['trigger_by']['name'] = $data['trigger_by']['username'];
+        unset($dataWithTriggererNameKeyChanged['trigger_by']['username']);
 
         Log::shouldReceive($level)
             ->once()
-            ->with($message, $dataWithTarget);
+            ->with($message, $dataWithTriggererNameKeyChanged);
+
+        EventLogger::log($level, $message, $data);
+    }
+
+    public function test_event_log_triggerer_names_unmatch()
+    {
+        Config::shouldReceive('get')
+            ->once()
+            ->with('logging.eventlog.disabled', false)
+            ->andReturn(false);
+
+        Config::shouldReceive('get')
+            ->once()
+            ->with('logging.eventlog.triggerer.names', ['name', 'username'])
+            ->andReturn(['name', 'username']);
+
+        $level = 'info';
+        $message = 'Example';
+        $data = [
+            'event'      => 'example.dummy',
+            'data'       => ['key' => 'value'],
+            'trigger_by' => [
+                'id'                       => 1,
+                'non_configged_name_field' => 'Admin',
+                'email'                    => 'admin@example.com',
+            ],
+            'type' => 'example',
+        ];
+
+        $this->expectException(\InvalidArgumentException::class);
 
         EventLogger::log($level, $message, $data);
     }

@@ -38,7 +38,32 @@ class EventLogger implements EventLoggerInterface
 
     protected function normalizeTriggerer($data)
     {
-        $keys = ['id', 'username', 'email'];
+        $names = Config::get(
+            'logging.eventlog.triggerer.names',
+            ['name', 'username']
+        );
+
+        $nameKey = '';
+
+        foreach ($names as $name) {
+            if (isset($data['trigger_by'][$name])) {
+                $nameKey = $name;
+            }
+        }
+
+        if (!$nameKey) {
+            throw new \InvalidArgumentException(
+                "There is no name related field for 'trigger_by'"
+            );
+        }
+
+        // set triggerer name in 'name' key
+        $data['trigger_by']['name'] = $data['trigger_by'][$nameKey];
+
+        $keys = Config::get(
+            'logging.eventlog.triggerer.fields',
+            ['id', 'name', 'email']
+        );
 
         foreach ($keys as $key) {
             if (!isset($data['trigger_by'][$key])) {
@@ -71,7 +96,7 @@ class EventLogger implements EventLoggerInterface
             $user = Auth::user() ?? null;
             $data['trigger_by'] = $user
                 ? $user?->toArray()
-                : ['id' => 0, 'username' => 'system', 'email' => ''];
+                : ['id' => 0, 'name' => 'system', 'email' => ''];
         }
 
         // get type from event key if not specified
