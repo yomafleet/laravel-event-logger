@@ -9,6 +9,19 @@ use Yomafleet\EventLogger\EventLoggerFacade as EventLogger;
 
 class EventLoggerTest extends TestCase
 {
+    public const ADMIN_NAME = 'Admin';
+    public const ADMIN_EMAIL = 'admin@example.com';
+
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        Config::set(
+            'logging.eventlog.triggerer.fields',
+            ['id', 'name', 'email']
+        );
+    }
+
     public function test_logger_not_run_if_disable()
     {
         Config::shouldReceive('get')
@@ -22,8 +35,8 @@ class EventLoggerTest extends TestCase
             'event'      => 'example.dummy',
             'trigger_by' => [
                 'id'       => 1,
-                'username' => 'Admin',
-                'email'    => 'admin@example.com',
+                'username' => self::ADMIN_NAME,
+                'email'    => self::ADMIN_EMAIL,
             ],
             'type' => 'example',
             'data' => ['key' => 'value'],
@@ -41,8 +54,9 @@ class EventLoggerTest extends TestCase
             'event'      => 'example.dummy',
             'trigger_by' => [
                 'id'       => 1,
-                'name'     => 'Admin',
-                'email'    => 'admin@example.com',
+                'name'     => self::ADMIN_NAME,
+                'email'    => self::ADMIN_EMAIL,
+                'phone'    => '097777810245',
             ],
             'type' => 'example',
             'data' => ['key' => 'value'],
@@ -70,11 +84,14 @@ class EventLoggerTest extends TestCase
         Auth::shouldReceive('user')->once()->andReturn(null);
         Log::shouldReceive($level)
             ->once()
-            ->with($message, $data + ['trigger_by' => [
-                'id'       => 0,
-                'name'     => 'system',
-                'email'    => '',
-            ]]);
+            ->with(
+                $message,
+                $data + ['trigger_by' => [
+                    'id'       => 0,
+                    'name'     => 'system',
+                    'email'    => '',
+                ]]
+            );
 
         EventLogger::log($level, $message, $data);
     }
@@ -89,8 +106,8 @@ class EventLoggerTest extends TestCase
         $data = [
             'trigger_by' => [
                 'id'       => 1,
-                'name'     => 'Admin',
-                'email'    => 'admin@example.com',
+                'name'     => self::ADMIN_NAME,
+                'email'    => self::ADMIN_EMAIL,
             ],
             'type' => 'example',
             'data' => ['key' => 'value'],
@@ -110,8 +127,8 @@ class EventLoggerTest extends TestCase
             'event'      => 'example.dummy',
             'trigger_by' => [
                 'id'       => 1,
-                'name'     => 'Admin',
-                'email'    => 'admin@example.com',
+                'name'     => self::ADMIN_NAME,
+                'email'    => self::ADMIN_EMAIL,
             ],
             'type' => 'example',
         ];
@@ -146,8 +163,8 @@ class EventLoggerTest extends TestCase
             'event'      => 'example.dummy',
             'trigger_by' => [
                 'id'       => 1,
-                'name'     => 'Admin',
-                'email'    => 'admin@example.com',
+                'name'     => self::ADMIN_NAME,
+                'email'    => self::ADMIN_EMAIL,
             ],
             'type' => 'example',
             'data' => ['key' => 'value'],
@@ -192,8 +209,8 @@ class EventLoggerTest extends TestCase
     {
         $dummy = [
             'id'       => 1,
-            'name'     => 'Admin',
-            'email'    => 'admin@example.com',
+            'name'     => self::ADMIN_NAME,
+            'email'    => self::ADMIN_EMAIL,
         ];
         Auth::shouldReceive('user')
             ->andReturn(new class($dummy) {
@@ -238,8 +255,8 @@ class EventLoggerTest extends TestCase
             'data'       => ['key' => 'value'],
             'trigger_by' => [
                 'id'       => 1,
-                'name'     => 'Admin',
-                'email'    => 'admin@example.com',
+                'name'     => self::ADMIN_NAME,
+                'email'    => self::ADMIN_EMAIL,
             ],
         ];
 
@@ -261,8 +278,8 @@ class EventLoggerTest extends TestCase
             'data'       => ['key' => 'value'],
             'trigger_by' => [
                 'id'       => 1,
-                'username' => 'Admin',
-                'email'    => 'admin@example.com',
+                'username' => self::ADMIN_NAME,
+                'email'    => self::ADMIN_EMAIL,
             ],
             'type' => 'example',
         ];
@@ -297,8 +314,8 @@ class EventLoggerTest extends TestCase
             'data'       => ['key' => 'value'],
             'trigger_by' => [
                 'id'                       => 1,
-                'non_configged_name_field' => 'Admin',
-                'email'                    => 'admin@example.com',
+                'non_configged_name_field' => self::ADMIN_NAME,
+                'email'                    => self::ADMIN_EMAIL,
             ],
             'type' => 'example',
         ];
