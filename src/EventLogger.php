@@ -36,11 +36,18 @@ class EventLogger implements EventLoggerInterface
         return true;
     }
 
+    /**
+     * Normalized "trigger_by" through configuration.
+     *
+     * @param array $data
+     * @return array
+     */
     protected function normalizeTriggerer($data)
     {
+        $nameVariants = ['name', 'username'];
         $names = Config::get(
             'logging.eventlog.triggerer.names',
-            ['name', 'username']
+            $nameVariants
         );
 
         $nameKey = '';
@@ -48,6 +55,7 @@ class EventLogger implements EventLoggerInterface
         foreach ($names as $name) {
             if (isset($data['trigger_by'][$name])) {
                 $nameKey = $name;
+                break;
             }
         }
 
@@ -59,26 +67,62 @@ class EventLogger implements EventLoggerInterface
 
         // set triggerer name in 'name' key
         $data['trigger_by']['name'] = $data['trigger_by'][$nameKey];
+        
+        // remove extra name variants
+        $junkNameVariants = array_filter($nameVariants, fn($v) => $v !== 'name');
+        foreach ($junkNameVariants as $junk) {
+            unset($data['trigger_by'][$junk]);
+        }
 
-        $keys = Config::get(
-            'logging.eventlog.triggerer.fields',
-            ['id', 'name', 'email']
+        $data['trigger_by'] = $this->checkTriggerFields($data['trigger_by']);
+
+        return $data;
+    }
+
+    /**
+     * Check triggerer's fields against sensible default or through
+     * configuration and determine whether to throw or just add empty
+     * value according to strict-mode configuration.
+     *
+     * @param array $triggerBy
+     * @param array|null $keys
+     * @return array
+     * @throws \InvalidArgumentException
+     */
+    protected function checkTriggerFields($triggerBy, $keys = null)
+    {
+        $defaultTriggererKeys = [
+            'id',
+            'name',
+            'email',
+            'phone',
+        ];
+
+        if ($keys === null) {
+            $keys = Config::get(
+                'logging.eventlog.triggerer.fields',
+                $defaultTriggererKeys
+            );
+        }
+
+        $isStrictTriggerer = Config::get(
+            'logging.eventlog.triggerer.strict_mode',
+            false
         );
 
         foreach ($keys as $key) {
-            if (!isset($data['trigger_by'][$key])) {
-                throw new \InvalidArgumentException(
-                    "Key named '{$key}' is not found in 'trigger_by'"
-                );
+            if (!isset($triggerBy[$key])) {
+                if ($isStrictTriggerer) {
+                    throw new \InvalidArgumentException(
+                        "Key named '{$key}' is not found in 'trigger_by'"
+                    );
+                }
+
+                $triggerBy[$key] = "";
             }
         }
 
-        $data['trigger_by'] = array_intersect_key(
-            $data['trigger_by'],
-            array_flip($keys)
-        );
-
-        return $data;
+        return $triggerBy;
     }
 
     /**
