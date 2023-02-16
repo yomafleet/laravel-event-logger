@@ -139,7 +139,7 @@ class EventLogger implements EventLoggerInterface
             /** @var mixed */
             $user = Auth::user() ?? null;
             $data['trigger_by'] = $user
-                ? $user?->toArray()
+                ? $user?->unsetRelations()?->toArray()
                 : ['id' => 0, 'name' => 'system', 'email' => ''];
         }
 
