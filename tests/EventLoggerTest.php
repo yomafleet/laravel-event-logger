@@ -221,6 +221,11 @@ class EventLoggerTest extends TestCase
                     $this->data = $data;
                 }
 
+                public function unsetRelations()
+                {
+                    return $this;
+                }
+
                 public function toArray()
                 {
                     return $this->data;
