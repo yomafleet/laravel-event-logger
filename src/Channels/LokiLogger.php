@@ -3,6 +3,7 @@
 namespace Yomafleet\EventLogger\Channels;
 
 use Monolog\Logger;
+use Yomafleet\EventLogger\Channels\LokiLogHandler;
 
 class LokiLogger
 {
