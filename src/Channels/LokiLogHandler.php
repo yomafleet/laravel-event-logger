@@ -63,9 +63,14 @@ class LokiLogHandler extends AbstractProcessingHandler
                     ->append($parsed['port']);
             }
 
-            $build->append($parsed['path']);
-
             $url = (string) $build;
+
+            // we can only concat `path` after Laravel Stringable is
+            // casted to string by method `__toString()` because that
+            // helper class does not account url path paraemters
+            if ($parsed['path']) {
+                $url .= $parsed['path'];
+            }
         }
 
         return $url;
