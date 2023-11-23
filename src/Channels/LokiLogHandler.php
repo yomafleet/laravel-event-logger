@@ -69,7 +69,7 @@ class LokiLogHandler extends AbstractProcessingHandler
             // casted to string by method `__toString()` because that
             // helper class does not account url path paraemters
             if ($parsed['path']) {
-                $url += $parsed['path'];
+                $url .= $parsed['path'];
             }
         }
 
