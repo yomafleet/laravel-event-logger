@@ -31,7 +31,7 @@ class EventLogger implements EventLoggerInterface
 
         $data = $this->normalizeTriggerer($data);
 
-        Log::$level($message, $data);
+        $this->flush($level, $message, $data);
 
         return true;
     }
@@ -67,7 +67,7 @@ class EventLogger implements EventLoggerInterface
 
         // set triggerer name in 'name' key
         $data['trigger_by']['name'] = $data['trigger_by'][$nameKey];
-        
+
         // remove extra name variants
         $junkNameVariants = array_filter($nameVariants, fn($v) => $v !== 'name');
         foreach ($junkNameVariants as $junk) {
@@ -172,6 +172,35 @@ class EventLogger implements EventLoggerInterface
             throw new \InvalidArgumentException(
                 "Key named 'data' is not found!"
             );
+        }
+    }
+
+    /**
+     * Flush the loggables.
+     *
+     * @param string $level
+     * @param string $message
+     * @param array $data
+     * @return void
+     */
+    protected function flush($level, $message, $data)
+    {
+        $connection = Config::get('logging.eventlog.dispatch.connection', false);
+        $afterCommit = Config::get('logging.eventlog.dispatch.after_commit', false);
+        $queue = Config::get('logging.eventlog.dispatch.queue', 'default');
+
+        $log = fn() => Log::$level($message, $data);
+
+        if (!$connection) {
+            $log();
+        } else {
+            $pendingDispatcher = dispatch(fn() => $log())
+                ->onConnection($connection)
+                ->onQueue($queue);
+
+            if ($afterCommit) {
+                $pendingDispatcher->afterCommit();
+            }
         }
     }
 }
