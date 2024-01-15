@@ -333,31 +333,6 @@ class EventLoggerTest extends TestCase
 
     public function test_log_can_dispatch()
     {
-        // Config::shouldReceive('get')
-        //     ->once()
-        //     ->with('logging.eventlog.dispatch.connection', false)
-        //     ->andReturn('redis');
-
-        // Config::shouldReceive('get')
-        //     ->once()
-        //     ->with('logging.eventlog.dispatch.after_commit', false)
-        //     ->andReturn(true);
-
-        // Config::shouldReceive('get')
-        //     ->once()
-        //     ->with('logging.eventlog.dispatch.queue', 'default')
-        //     ->andReturn('default');
-
-        // Config::shouldReceive('get')
-        // ->once()
-        // ->with('logging.eventlog.disabled', false)
-        // ->andReturn(false);
-
-        // Config::shouldReceive('get')
-        //     ->once()
-        //     ->with('logging.eventlog.triggerer.names', ['name', 'username'])
-        //     ->andReturn(['name', 'username']);
-
         Config::set(
             'logging.eventlog',
             [
