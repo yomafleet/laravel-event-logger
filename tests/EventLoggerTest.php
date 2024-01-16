@@ -3,8 +3,9 @@
 namespace Tests;
 
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Config;
 use Yomafleet\EventLogger\EventLoggerFacade as EventLogger;
 
 class EventLoggerTest extends TestCase
@@ -213,7 +214,7 @@ class EventLoggerTest extends TestCase
             'email'    => self::ADMIN_EMAIL,
         ];
         Auth::shouldReceive('user')
-            ->andReturn(new class($dummy) {
+            ->andReturn(new class ($dummy) {
                 public $data;
 
                 public function __construct($data)
@@ -328,5 +329,42 @@ class EventLoggerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
 
         EventLogger::log($level, $message, $data);
+    }
+
+    public function test_log_can_dispatch()
+    {
+        Config::set(
+            'logging.eventlog',
+            [
+                'disabled' => false,
+                'dispatch' => [
+                    'connection' => 'redis',
+                    'after_commit' => true,
+                    'queue' => 'default',
+                ],
+                'triggerer' => [
+                    'fields' => ['id', 'name', 'email'],
+                ],
+            ]
+        );
+
+        $level = 'info';
+        $message = 'Example';
+        $data = [
+            'event'      => 'example.dummy',
+            'trigger_by' => [
+                'id'       => 1,
+                'name'     => self::ADMIN_NAME,
+                'email'    => self::ADMIN_EMAIL,
+                'phone'    => '097777810245',
+            ],
+            'type' => 'example',
+            'data' => ['key' => 'value'],
+        ];
+
+        Queue::fake();
+        EventLogger::log($level, $message, $data);
+
+        Queue::assertPushed('Illuminate\Queue\CallQueuedClosure');
     }
 }

@@ -15,7 +15,7 @@ class LokiLogger
      */
     public function __invoke(array $config)
     {
-        $name = isset($config['service']) ? $config['service'].'loki' : 'loki';
+        $name = isset($config['service']) ? $config['service'].'/loki' : 'loki';
         $logger = new Logger($name);
         $logger->pushHandler(new LokiLogHandler($config));
 

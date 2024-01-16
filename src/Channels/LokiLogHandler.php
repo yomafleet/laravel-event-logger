@@ -2,12 +2,14 @@
 
 namespace Yomafleet\EventLogger\Channels;
 
+use Throwable;
 use Carbon\Carbon;
 use Monolog\Logger;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\Response;
 use Monolog\Handler\AbstractProcessingHandler;
 use Yomafleet\EventLogger\Exceptions\MalformedURLException;
 use Yomafleet\EventLogger\Exceptions\ConfigurationMissingException;
@@ -63,9 +65,14 @@ class LokiLogHandler extends AbstractProcessingHandler
                     ->append($parsed['port']);
             }
 
-            $build->append($parsed['path']);
-
             $url = (string) $build;
+
+            // we can only concat `path` after Laravel Stringable is
+            // casted to string by method `__toString()` because that
+            // helper class does not account url path paraemters
+            if ($parsed['path']) {
+                $url .= $parsed['path'];
+            }
         }
 
         return $url;
@@ -77,22 +84,18 @@ class LokiLogHandler extends AbstractProcessingHandler
     protected function write(array $record): void
     {
         $this->validate();
-
-        $record = $this->formatRecord($record);
-
-        $this->send($record);
+        $this->send($this->wrap($record));
     }
 
     /**
-     * Formats the given record
+     * Wrap the record to with loki acceptable format
      *
      * @param array $record
      * @return array
      */
-    protected function formatRecord(array $record): array
+    protected function wrap(array $record): array
     {
         $nanoEpoch = Carbon::now()->timestamp * 1_000_000_000;
-
         $record = $this->trimRecord($record);
 
         return [
@@ -100,19 +103,40 @@ class LokiLogHandler extends AbstractProcessingHandler
                 [
                     'stream' => ['service' => $this->config['service']],
                     'values' => [
-                        [(string) $nanoEpoch, json_encode($record)]
+                        [(string) $nanoEpoch, $this->stringify($record)]
                     ]
                 ]
             ],
         ];
     }
 
-     /**
-     * Trims the given record
+    /**
+     * Stringify the given record
      *
      * @param array $record
-     * @return array
+     * @return string
      */
+    protected function stringify(array $record): string
+    {
+        // try to optimize if exception is present
+        if (isset($record['exception']) && $record['exception'] instanceof Throwable) {
+            $record['exception'] = [
+                'name' => get_class($record['exception']),
+                'file' => $record['exception']->getFile(),
+                'line' => $record['exception']->getLine(),
+                // 'trace' => $record['exception']->getTrace(),
+            ];
+        }
+
+        return json_encode($record, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+    }
+
+    /**
+    * Trims the given record
+    *
+    * @param array $record
+    * @return array
+    */
     protected function trimRecord(array $record): array
     {
         // remove formatted
@@ -128,7 +152,7 @@ class LokiLogHandler extends AbstractProcessingHandler
     }
 
     /**
-     * Send the recored to Loki server
+     * Send the record to Loki server
      *
      * @param array $record
      * @return void
@@ -137,17 +161,41 @@ class LokiLogHandler extends AbstractProcessingHandler
     {
         $promised = Http::async()
             ->asJson()
+            ->acceptJson()
+            ->withCookies(['SESSID' => session()->getId()], env('APP_URL'))
             ->post($this->url, $record)
             ->then(function ($response) use ($record) {
-                if (!$response->successful()) {
-                    Log::channel($this->getErrorLogClient())->alert(
-                        "Loki log error",
-                        ['error' => $response->toException(), 'record' => $record]
-                    );
-                }
+                $this->handleLoggingError($response, $record);
             });
 
         $promised->wait();
+    }
+
+    /**
+     * Log to the different error log client if Loki rejected
+     *
+     * @param Response|Throwable $response
+     * @param array $record
+     * @return void
+     */
+    protected function handleLoggingError($response, $record)
+    {
+        $logger = Log::channel($this->getErrorLogClient());
+
+        if ($response instanceof Response && !$response->successful()) {
+            $e = $response->toException();
+            $logger->alert($e->getMessage(), [
+                    'error' => $_ENV,
+                    'record' => $record,
+                    'data' => $response->json(),
+            ]);
+        } elseif ($response instanceof Throwable) {
+            $logger->alert($response->getMessage(), [
+                'error' => $response,
+                'record' => $record,
+                'data' => $response->getTrace(),
+            ]);
+        }
     }
 
     /**
