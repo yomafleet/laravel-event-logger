@@ -7,14 +7,11 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Set working directory
 WORKDIR /app
 
-COPY composer.json composer.lock* ./
-
-RUN composer install --no-interaction --prefer-dist --no-scripts
-
-COPY . .
-
-CMD ["./vendor/bin/phpunit"]
+# Keep container running
+CMD ["tail", "-f", "/dev/null"]
