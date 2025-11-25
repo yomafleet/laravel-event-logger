@@ -5,6 +5,7 @@ namespace Yomafleet\EventLogger\Channels;
 use Throwable;
 use Carbon\Carbon;
 use Monolog\Logger;
+use Monolog\LogRecord;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
@@ -47,7 +48,7 @@ class LokiLogHandler extends AbstractProcessingHandler
             throw new MalformedURLException();
         }
 
-        if (isset($config['id']) && $config['token']) {
+        if (isset($config['id']) && isset($config['token'])) {
             // amend url with basith auth
             $parsed = parse_url($url);
 
@@ -79,12 +80,21 @@ class LokiLogHandler extends AbstractProcessingHandler
     }
 
     /**
-     * @inheritDoc
+     * Writes the record down to the log of the implementing handler
+     *
+     * Supports both Monolog 2 (array) and Monolog 3 (LogRecord)
+     *
+     * @param array|LogRecord $record
+     * @return void
      */
-    protected function write(array $record): void
+    protected function write(array|LogRecord $record): void
     {
         $this->validate();
-        $this->send($this->wrap($record));
+
+        // Support both Monolog 2 (array) and Monolog 3 (LogRecord)
+        $recordArray = $record instanceof LogRecord ? $record->toArray() : $record;
+
+        $this->send($this->wrap($recordArray));
     }
 
     /**

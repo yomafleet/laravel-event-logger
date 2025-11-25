@@ -1,0 +1,9 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: event-logger-test
+    volumes:
+      - .:/app
+    working_dir: /app
