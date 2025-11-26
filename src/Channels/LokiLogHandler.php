@@ -82,19 +82,13 @@ class LokiLogHandler extends AbstractProcessingHandler
     /**
      * Writes the record down to the log of the implementing handler
      *
-     * Supports both Monolog 2 (array) and Monolog 3 (LogRecord)
-     *
-     * @param array|LogRecord $record
+     * @param LogRecord $record
      * @return void
      */
-    protected function write(array|LogRecord $record): void
+    protected function write(LogRecord $record): void
     {
         $this->validate();
-
-        // Support both Monolog 2 (array) and Monolog 3 (LogRecord)
-        $recordArray = $record instanceof LogRecord ? $record->toArray() : $record;
-
-        $this->send($this->wrap($recordArray));
+        $this->send($this->wrap($record->toArray()));
     }
 
     /**

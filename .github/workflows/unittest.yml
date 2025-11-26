@@ -2,7 +2,7 @@ name: Car Share Event Logger Unit Tests
 
 on:
   pull_request:
-    branches: [dev-master]
+    branches: [dev-master, master]
     paths-ignore:
       - "README.md"
       - ".github/**"
@@ -11,18 +11,25 @@ jobs:
   laravel-unit-tests:
     runs-on: ubuntu-22.04
 
+    strategy:
+      matrix:
+        php-version: ['8.2', '8.3']
+
+    name: PHP ${{ matrix.php-version }} Tests
+
     steps:
-      - uses: shivammathur/setup-php@2.21.0
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.0.2"
-          extensions: mbstring, intl, dom, curl, libxml, zip, json, Phar, dom, pcre, Reflection, SPL, tokenizer
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, intl, dom, curl, libxml, zip, json, Phar, pcre, Reflection, SPL, tokenizer
+          coverage: none
 
       - name: Code Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install Dependencies
-        run: composer update
+        run: composer update --no-interaction --prefer-dist
 
       - name: Run Unit Tests
-        continue-on-error: false
         run: vendor/bin/phpunit

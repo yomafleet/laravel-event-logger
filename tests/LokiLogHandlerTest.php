@@ -18,42 +18,7 @@ class LokiLogHandlerTest extends TestCase
         Mockery::close();
     }
 
-    public function test_handler_accepts_array_record_monolog_2_compatibility()
-    {
-        Http::fake([
-            '*' => Http::response(['status' => 'success'], 200),
-        ]);
-
-        $config = [
-            'url' => 'http://localhost:3100/loki/api/v1/push',
-            'service' => 'test-service',
-        ];
-
-        $handler = new LokiLogHandler($config);
-
-        // Monolog 2 style - array parameter
-        $record = [
-            'message' => 'Test message',
-            'context' => [],
-            'level' => 200,
-            'level_name' => 'INFO',
-            'channel' => 'test',
-            'datetime' => new \DateTimeImmutable(),
-            'extra' => [],
-        ];
-
-        // Use reflection to call protected write method
-        $reflection = new \ReflectionClass($handler);
-        $method = $reflection->getMethod('write');
-        $method->setAccessible(true);
-
-        // Should not throw exception
-        $method->invoke($handler, $record);
-
-        $this->assertTrue(true); // If we got here, test passed
-    }
-
-    public function test_handler_accepts_log_record_monolog_3_compatibility()
+    public function test_handler_accepts_log_record()
     {
         Http::fake([
             '*' => Http::response(['status' => 'success'], 200),
@@ -126,21 +91,20 @@ class LokiLogHandlerTest extends TestCase
 
         $handler = new LokiLogHandler($config);
 
-        $record = [
-            'message' => 'Test message',
-            'context' => [],
-            'level' => 200,
-            'level_name' => 'INFO',
-            'channel' => 'test',
-            'datetime' => new \DateTimeImmutable(),
-            'extra' => [],
-        ];
+        $logRecord = new LogRecord(
+            datetime: new \DateTimeImmutable(),
+            channel: 'test',
+            level: Level::Info,
+            message: 'Test message',
+            context: [],
+            extra: []
+        );
 
         $reflection = new \ReflectionClass($handler);
         $method = $reflection->getMethod('write');
         $method->setAccessible(true);
 
-        $method->invoke($handler, $record);
+        $method->invoke($handler, $logRecord);
     }
 
     public function test_builds_url_with_basic_auth()
@@ -299,21 +263,20 @@ class LokiLogHandlerTest extends TestCase
 
         $handler = new LokiLogHandler($config);
 
-        $record = [
-            'message' => 'Test message',
-            'context' => [],
-            'level' => 200,
-            'level_name' => 'INFO',
-            'channel' => 'test',
-            'datetime' => new \DateTimeImmutable(),
-            'extra' => [],
-        ];
+        $logRecord = new LogRecord(
+            datetime: new \DateTimeImmutable(),
+            channel: 'test',
+            level: Level::Info,
+            message: 'Test message',
+            context: [],
+            extra: []
+        );
 
         $reflection = new \ReflectionClass($handler);
         $method = $reflection->getMethod('write');
         $method->setAccessible(true);
 
-        $method->invoke($handler, $record);
+        $method->invoke($handler, $logRecord);
 
         Http::assertSent(function ($request) {
             return $request->url() === 'http://localhost:3100/loki/api/v1/push' &&
