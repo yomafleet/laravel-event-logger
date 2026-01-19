@@ -3,3 +3,5 @@
 .vscode
 .phpunit.result.cache
 .phpunit.cache
+docker-compose.yml
+Dockerfile
