@@ -5,6 +5,7 @@ namespace Yomafleet\EventLogger\Channels;
 use Throwable;
 use Carbon\Carbon;
 use Monolog\Logger;
+use Monolog\LogRecord;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
@@ -47,7 +48,7 @@ class LokiLogHandler extends AbstractProcessingHandler
             throw new MalformedURLException();
         }
 
-        if (isset($config['id']) && $config['token']) {
+        if (isset($config['id']) && isset($config['token'])) {
             // amend url with basith auth
             $parsed = parse_url($url);
 
@@ -79,12 +80,15 @@ class LokiLogHandler extends AbstractProcessingHandler
     }
 
     /**
-     * @inheritDoc
+     * Writes the record down to the log of the implementing handler
+     *
+     * @param LogRecord $record
+     * @return void
      */
-    protected function write(array $record): void
+    protected function write(LogRecord $record): void
     {
         $this->validate();
-        $this->send($this->wrap($record));
+        $this->send($this->wrap($record->toArray()));
     }
 
     /**
@@ -162,7 +166,7 @@ class LokiLogHandler extends AbstractProcessingHandler
         $promised = Http::async()
             ->asJson()
             ->acceptJson()
-            ->withCookies(['SESSID' => session()->getId()], env('APP_URL'))
+            ->withCookies(['SESSID' => session()->getId()], env('APP_URL', 'localhost'))
             ->post($this->url, $record)
             ->then(function ($response) use ($record) {
                 $this->handleLoggingError($response, $record);

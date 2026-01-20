@@ -25,10 +25,7 @@ class EventLoggerTest extends TestCase
 
     public function test_logger_not_run_if_disable()
     {
-        Config::shouldReceive('get')
-            ->once()
-            ->with('logging.eventlog.disabled', false)
-            ->andReturn(true);
+        Config::set('logging.eventlog.disabled', true);
 
         $level = 'info';
         $message = 'Example';
@@ -303,15 +300,8 @@ class EventLoggerTest extends TestCase
 
     public function test_event_log_triggerer_names_unmatch()
     {
-        Config::shouldReceive('get')
-            ->once()
-            ->with('logging.eventlog.disabled', false)
-            ->andReturn(false);
-
-        Config::shouldReceive('get')
-            ->once()
-            ->with('logging.eventlog.triggerer.names', ['name', 'username'])
-            ->andReturn(['name', 'username']);
+        Config::set('logging.eventlog.disabled', false);
+        Config::set('logging.eventlog.triggerer.names', ['name', 'username']);
 
         $level = 'info';
         $message = 'Example';
