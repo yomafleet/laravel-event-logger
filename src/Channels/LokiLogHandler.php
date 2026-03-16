@@ -22,6 +22,18 @@ class LokiLogHandler extends AbstractProcessingHandler
     protected array $config;
 
     /**
+     * Static array to hold pending async promises
+     * @var array
+     */
+    protected static array $pendingPromises = [];
+
+    /**
+     * Track if shutdown function is registered
+     * @var bool
+     */
+    protected static bool $shutdownRegistered = false;
+
+    /**
      * @param array $config
      * @param int|string $level  The minimum logging level at which this handler will be triggered
      * @param bool       $bubble Whether the messages that are handled can bubble up the stack or not
@@ -34,6 +46,12 @@ class LokiLogHandler extends AbstractProcessingHandler
 
         $this->config = $config;
         $this->url = $this->buildUrlFromConfig($config);
+
+        // This runs after the response is sent to the user
+        if (!self::$shutdownRegistered) {
+            register_shutdown_function([self::class, 'flushPendingPromises']);
+            self::$shutdownRegistered = true;
+        }
     }
 
     protected function buildUrlFromConfig(array $config)
@@ -163,16 +181,25 @@ class LokiLogHandler extends AbstractProcessingHandler
      */
     protected function send(array $record)
     {
-        $promised = Http::async()
+        // Create async promise and store it for later resolution
+        $promise = Http::async()
+            ->timeout(3)
             ->asJson()
             ->acceptJson()
             ->withCookies(['SESSID' => session()->getId()], env('APP_URL', 'localhost'))
             ->post($this->url, $record)
-            ->then(function ($response) use ($record) {
-                $this->handleLoggingError($response, $record);
-            });
+            ->then(
+                // Success callback
+                function ($response) use ($record) {
+                    $this->handleLoggingError($response, $record);
+                },
+                // Failure callback
+                function ($exception) use ($record) {
+                    $this->handleLoggingError($exception, $record);
+                }
+            );
 
-        $promised->wait();
+        self::$pendingPromises[] = $promise;
     }
 
     /**
@@ -228,5 +255,25 @@ class LokiLogHandler extends AbstractProcessingHandler
         if (!$this->url) {
             throw new ConfigurationMissingException("Configuration: 'url' is missing");
         }
+    }
+
+    /**
+     * Flush all pending async promises
+     * This is called by PHP's shutdown function after the response is sent
+     *
+     * @return void
+     */
+    public static function flushPendingPromises(): void
+    {
+        if (empty(self::$pendingPromises)) {
+            return;
+        }
+
+        foreach (self::$pendingPromises as $promise) {
+            $promise->wait();
+        }
+
+        // Clear the promises array
+        self::$pendingPromises = [];
     }
 }
