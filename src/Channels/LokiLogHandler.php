@@ -163,16 +163,22 @@ class LokiLogHandler extends AbstractProcessingHandler
      */
     protected function send(array $record)
     {
-        $promised = Http::async()
+        Http::async()
             ->asJson()
             ->acceptJson()
             ->withCookies(['SESSID' => session()->getId()], env('APP_URL', 'localhost'))
             ->post($this->url, $record)
-            ->then(function ($response) use ($record) {
-                $this->handleLoggingError($response, $record);
-            });
+            ->then(
+                // Success callback - handles HTTP responses (2xx, 4xx, 5xx)
+                function ($response) use ($record) {
+                    $this->handleLoggingError($response, $record);
+                },
+                // Failure callback - handles network errors, timeouts, connection failures
+                function ($exception) use ($record) {
+                    $this->handleLoggingError($exception, $record);
+                }
+            );
 
-        $promised->wait();
     }
 
     /**
